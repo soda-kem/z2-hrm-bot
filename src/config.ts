@@ -37,7 +37,7 @@ const config: Configuration = {
   checkinBtn: process.env.CHECKIN_SELECTOR || '',
   checkoutBtn: process.env.CHECKOUT_SELECTOR || '',
   checkinStart: moment(process.env.CHECKIN_START || '08:15', 'HH:mm'),
-  checkoutStart: moment(process.env.CHECKOUT_STA || '17:45', 'HH:mm'),
+  checkoutStart: moment(process.env.CHECKOUT_START || '17:45', 'HH:mm'),
   auto: process.env.AUTO === 'true',
   random: process.env.RANDOM === 'true',
   checkinRangeStart: moment(process.env.CHECKIN_RANGE_START || '08:00', 'HH:mm'),
