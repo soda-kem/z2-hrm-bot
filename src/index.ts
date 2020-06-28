@@ -13,7 +13,7 @@ stealth.onBrowser = () => {
 puppeteer.use(stealth)
 
 const run = async (checkin = true) => {
-  if (config.random) {
+  if (config.auto && config.random) {
     let checkinAfter = ~~(Math.random() * (config.checkinRangeEnd.diff(config.checkinRangeStart, 'm')) + 1)
     let checkoutAfter = ~~(Math.random() * (config.checkoutRangeEnd.diff(config.checkoutRangeStart, 'm')) + 1)
     const delay = checkin ? checkinAfter : checkoutAfter
@@ -51,9 +51,10 @@ const run = async (checkin = true) => {
     checked = true
     logger.warn('Bạn đã checkin hoặc checkout rồi')
   }
+
   if (!checked) {
     await page.click(config.checkinBtn)
-    if (!checkin && (config.random ? moment().isSameOrAfter(config.checkoutRangeStart) : moment().isSameOrAfter(config.checkoutStart))) {
+    if (!checkin || (!config.auto && moment().isSameOrAfter(config.checkoutStart))) {
       await page.on('dialog', (dialog) => {
         logger.info('Hộp thoại xác nhận đang mở...')
         sleep(1000)
