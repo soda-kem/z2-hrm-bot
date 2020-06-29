@@ -39,6 +39,7 @@ const run = async (checkin = true) => {
   await page.mainFrame().waitForSelector('#password input[type=password]', { visible: true })
   logger.info('Nhập password...')
   await page.type('#password input[type=password]', credentials.password)
+  await page.waitFor(1000)
   await page.mainFrame().waitForSelector('#passwordNext')
   logger.info('Ấn nút hoàn thành...')
   await page.click('#passwordNext')
@@ -51,18 +52,23 @@ const run = async (checkin = true) => {
     checked = true
     logger.warn('Bạn đã checkin hoặc checkout rồi')
   }
-
   if (!checked) {
-    await page.click(config.checkinBtn)
-    if (!checkin || (!config.auto && moment().isSameOrAfter(config.checkoutStart))) {
-      await page.on('dialog', (dialog) => {
+    page.on('dialog', (dialog) => {
+      if (!checkin || (!config.auto && moment().isSameOrAfter(config.checkoutStart))) {
         logger.info('Hộp thoại xác nhận đang mở...')
         sleep(1000)
-        logger.info('Đã chấp nhận...')
         dialog.accept()
+        logger.info('Đã chấp nhận...')
         sleep(1000)
-      })
-    }
+      } else {
+        logger.info('Hộp thoại xác nhận đang mở...')
+        sleep(1000)
+        dialog.dismiss()
+        logger.info('Đã hủy bỏ vì chưa đến lúc checkout...')
+        sleep(1000)
+      }
+    })
+    await page.click(config.checkinBtn)
     await page.waitFor(3000)
   }
   await browser.close()
