@@ -8,14 +8,22 @@ import logger from './logger'
 import * as moment from 'moment'
 
 const stealth = require('puppeteer-extra-plugin-stealth')()
-stealth.onBrowser = () => {
-}
+// eslint-disable-next-line @typescript-eslint/no-empty-function
+stealth.onBrowser = () => {}
 puppeteer.use(stealth)
 
 const run = async (checkin = true) => {
   if (config.auto && config.random) {
-    let checkinAfter = ~~(Math.random() * (config.checkinRangeEnd.diff(config.checkinRangeStart, 'm')) + 1)
-    let checkoutAfter = ~~(Math.random() * (config.checkoutRangeEnd.diff(config.checkoutRangeStart, 'm')) + 1)
+    const checkinAfter = ~~(
+      Math.random() *
+        config.checkinRangeEnd.diff(config.checkinRangeStart, 'm') +
+      1
+    )
+    const checkoutAfter = ~~(
+      Math.random() *
+        config.checkoutRangeEnd.diff(config.checkoutRangeStart, 'm') +
+      1
+    )
     const delay = checkin ? checkinAfter : checkoutAfter
     logger.info(`Checkin/Checkout sẽ bắt đầu sau ${delay} phút`)
     await sleep(delay * 60 * 1000)
@@ -36,7 +44,9 @@ const run = async (checkin = true) => {
   await page.mainFrame().waitForSelector('#identifierNext')
   logger.info('Ấn nút Tiếp theo...')
   await page.click('#identifierNext')
-  await page.mainFrame().waitForSelector('#password input[type=password]', { visible: true })
+  await page
+    .mainFrame()
+    .waitForSelector('#password input[type=password]', { visible: true })
   logger.info('Nhập password...')
   await page.type('#password input[type=password]', credentials.password)
   await page.waitFor(1000)
@@ -47,14 +57,19 @@ const run = async (checkin = true) => {
   await page.waitFor(3000)
   let checked = false
   try {
-    await page.mainFrame().waitForSelector(config.checkinBtn, { visible: true, timeout: 3000 })
+    await page
+      .mainFrame()
+      .waitForSelector(config.checkinBtn, { visible: true, timeout: 3000 })
   } catch (e) {
     checked = true
     logger.warn('Bạn đã checkin hoặc checkout rồi')
   }
   if (!checked) {
     page.on('dialog', (dialog) => {
-      if (!checkin || (!config.auto && moment().isSameOrAfter(config.checkoutStart))) {
+      if (
+        !checkin ||
+        (!config.auto && moment().isSameOrAfter(config.checkoutStart))
+      ) {
         logger.info('Hộp thoại xác nhận đang mở...')
         sleep(1000)
         dialog.accept()
@@ -74,9 +89,9 @@ const run = async (checkin = true) => {
   await browser.close()
   logger.info('Kết thúc.')
   logger.info('_____________________________________________________________')
-};
+}
 
-(async () => {
+;(async () => {
   try {
     logger.info('Ứng dụng đang khởi động...')
     if (config.auto) {
@@ -86,11 +101,23 @@ const run = async (checkin = true) => {
       if (config.random) {
         checkinTime = config.checkinRangeStart
         checkoutTime = config.checkoutRangeStart
-        logger.info(`Checkin ngẫu nhiên trong khoảng ${config.checkinRangeStart.format('HH:mm')} - ${config.checkinRangeEnd.format('HH:mm')}`)
-        logger.info(`Checkout ngẫu nhiên trong khoảng ${config.checkoutRangeStart.format('HH:mm')} - ${config.checkoutRangeEnd.format('HH:mm')}`)
+        logger.info(
+          `Checkin ngẫu nhiên trong khoảng ${config.checkinRangeStart.format(
+            'HH:mm'
+          )} - ${config.checkinRangeEnd.format('HH:mm')}`
+        )
+        logger.info(
+          `Checkout ngẫu nhiên trong khoảng ${config.checkoutRangeStart.format(
+            'HH:mm'
+          )} - ${config.checkoutRangeEnd.format('HH:mm')}`
+        )
       } else {
-        logger.info(`Checkin bắt đầu lúc ${config.checkinStart.format('HH:mm')}`)
-        logger.info(`Checkout bắt đầu lúc ${config.checkoutStart.format('HH:mm')}`)
+        logger.info(
+          `Checkin bắt đầu lúc ${config.checkinStart.format('HH:mm')}`
+        )
+        logger.info(
+          `Checkout bắt đầu lúc ${config.checkoutStart.format('HH:mm')}`
+        )
       }
       let days = '*'
       if (config.days.length) {
@@ -120,7 +147,9 @@ const run = async (checkin = true) => {
       )
       process.stdin.resume()
     } else {
-      logger.warn('Bạn đang không sử dụng Auto Schedule.\nHãy chắc chắn đã config chạy tự động script này.')
+      logger.warn(
+        'Bạn đang không sử dụng Auto Schedule.\nHãy chắc chắn đã config chạy tự động script này.'
+      )
       await run()
     }
   } catch (e) {

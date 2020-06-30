@@ -8,7 +8,8 @@
     "build": "tsc --project tsconfig.json",
     "start": "yarn build && yarn prod",
     "prod": "node dist/index.js",
-    "lint": "eslint --ext .ts --ignore-path .gitignore ."
+    "lint": "eslint --ext .ts --ignore-path .gitignore .",
+    "format": "prettier --write \"**/*.ts\""
   },
   "author": "",
   "license": "ISC",
