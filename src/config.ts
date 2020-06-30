@@ -19,6 +19,7 @@ export interface Configuration {
   checkinRangeEnd: moment.Moment,
   checkoutRangeStart: moment.Moment,
   checkoutRangeEnd: moment.Moment,
+  days: number[]
   puppeteer: {
     viewport: {
       width: number,
@@ -44,6 +45,7 @@ const config: Configuration = {
   checkinRangeEnd: moment(process.env.CHECKIN_RANGE_END || '08:25', 'HH:mm'),
   checkoutRangeStart: moment(process.env.CHECKOUT_RANGE_START || '17:35', 'HH:mm'),
   checkoutRangeEnd: moment(process.env.CHECKOUT_RANGE_END || '18:00', 'HH:mm'),
+  days: process.env.DAYS ? process.env.DAYS.split(',').map(d => +d) : [],
   puppeteer: {
     viewport: {
       width: +process.env.PUPPETEER_VIEWPORT_W || 1920,

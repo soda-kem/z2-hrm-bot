@@ -92,8 +92,16 @@ const run = async (checkin = true) => {
         logger.info(`Checkin bắt đầu lúc ${config.checkinStart.format('HH:mm')}`)
         logger.info(`Checkout bắt đầu lúc ${config.checkoutStart.format('HH:mm')}`)
       }
+      let days = '*'
+      if (config.days.length) {
+        days = config.days.join(',')
+      }
+      const checkinCronCommand = `0 ${checkinTime.minute()} ${checkinTime.hour()} * * ${days}`
+      const checkoutCronCommand = `0 ${checkoutTime.minute()} ${checkoutTime.hour()} * * ${days}`
+      logger.info(`Checkin cron command: ${checkinCronCommand}`)
+      logger.info(`Checkout cron command: ${checkoutCronCommand}`)
       new CronJob(
-        `0 ${checkinTime.minute()} ${checkinTime.hour()} * * * `,
+        checkinCronCommand,
         () => {
           run()
         },
@@ -102,7 +110,7 @@ const run = async (checkin = true) => {
         'Asia/Ho_Chi_Minh'
       )
       new CronJob(
-        `0 ${checkoutTime.minute()} ${checkoutTime.hour()} * * * `,
+        checkoutCronCommand,
         () => {
           run(false)
         },
