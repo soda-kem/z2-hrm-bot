@@ -45,5 +45,8 @@
     "hooks": {
       "pre-commit": "lint-staged"
     }
+  },
+  "lint-staged": {
+    "*.{ts}": "yarn lint"
   }
 }
