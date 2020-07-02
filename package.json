@@ -14,8 +14,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@types/cron": "^1.7.2",
-    "@types/puppeteer": "^3.0.0",
     "cron": "^1.8.2",
     "dotenv": "^8.2.0",
     "lodash": "^4.17.15",
@@ -26,6 +24,8 @@
     "winston": "^3.3.3"
   },
   "devDependencies": {
+    "@types/cron": "^1.7.2",
+    "@types/puppeteer": "^3.0.0",
     "@types/dotenv": "^8.2.0",
     "@types/node": "^14.0.14",
     "@typescript-eslint/eslint-plugin": "^3.4.0",
