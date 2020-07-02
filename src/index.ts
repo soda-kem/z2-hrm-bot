@@ -16,7 +16,7 @@ const checkin = async () => {
   if (config.auto && config.random) {
     const checkinAfter = ~~(
       Math.random() *
-      config.checkinRangeEnd.diff(config.checkinRangeStart, 'm') +
+        config.checkinRangeEnd.diff(config.checkinRangeStart, 'm') +
       1
     )
     logger.info(`Checkin/Checkout sẽ bắt đầu sau ${checkinAfter} phút`)
@@ -72,7 +72,7 @@ const checkout = async () => {
   if (config.auto && config.random) {
     const checkoutAfter = ~~(
       Math.random() *
-      config.checkoutRangeEnd.diff(config.checkoutRangeStart, 'm') +
+        config.checkoutRangeEnd.diff(config.checkoutRangeStart, 'm') +
       1
     )
     logger.info(`Checkin/Checkout sẽ bắt đầu sau ${checkoutAfter} phút`)
@@ -176,20 +176,8 @@ const checkout = async () => {
       const checkoutCronCommand = `0 ${checkoutTime.minute()} ${checkoutTime.hour()} * * ${days}`
       logger.info(`Checkin cron command: ${checkinCronCommand}`)
       logger.info(`Checkout cron command: ${checkoutCronCommand}`)
-      new CronJob(
-        checkinCronCommand,
-        checkin,
-        null,
-        true,
-        'Asia/Ho_Chi_Minh'
-      )
-      new CronJob(
-        checkoutCronCommand,
-        checkout,
-        null,
-        true,
-        'Asia/Ho_Chi_Minh'
-      )
+      new CronJob(checkinCronCommand, checkin, null, true, 'Asia/Ho_Chi_Minh')
+      new CronJob(checkoutCronCommand, checkout, null, true, 'Asia/Ho_Chi_Minh')
       process.stdin.resume()
     } else {
       logger.warn(
