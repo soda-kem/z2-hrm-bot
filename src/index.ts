@@ -12,21 +12,71 @@ const stealth = require('puppeteer-extra-plugin-stealth')()
 stealth.onBrowser = () => {}
 puppeteer.use(stealth)
 
-const run = async (checkin = true) => {
+const checkin = async () => {
   if (config.auto && config.random) {
     const checkinAfter = ~~(
       Math.random() *
-        config.checkinRangeEnd.diff(config.checkinRangeStart, 'm') +
+      config.checkinRangeEnd.diff(config.checkinRangeStart, 'm') +
       1
     )
+    logger.info(`Checkin/Checkout sẽ bắt đầu sau ${checkinAfter} phút`)
+    await sleep(checkinAfter * 60 * 1000)
+  }
+
+  const credentials = config.credentials
+
+  const browser = await puppeteer.launch(PuppeteerOptions)
+  const page = await browser.newPage()
+  if (!config.headless) {
+    await page.setViewport(config.puppeteer.viewport)
+  }
+  await page.goto(`${config.domain}/login`, { waitUntil: 'networkidle2' })
+
+  logger.info('Đang đăng nhập Google...')
+  await page.mainFrame().waitForSelector('#identifierId')
+  logger.info('Nhập email...')
+  await page.type('#identifierId', credentials.email)
+  await page.mainFrame().waitForSelector('#identifierNext')
+  logger.info('Ấn nút Tiếp theo...')
+  await page.click('#identifierNext')
+  await page
+    .mainFrame()
+    .waitForSelector('#password input[type=password]', { visible: true })
+  logger.info('Nhập password...')
+  await page.type('#password input[type=password]', credentials.password)
+  await page.waitFor(1000)
+  await page.mainFrame().waitForSelector('#passwordNext')
+  logger.info('Ấn nút hoàn thành...')
+  await page.click('#passwordNext')
+  logger.info('Đang chuyển hướng về trang chủ...')
+  await page.waitFor(3000)
+  let shouldCheck = true
+  try {
+    await page
+      .mainFrame()
+      .waitForSelector(config.checkinBtn, { visible: true, timeout: 3000 })
+  } catch (e) {
+    shouldCheck = false
+    logger.warn('Bạn đã checkin rồi')
+  }
+  if (shouldCheck) {
+    await page.click(config.checkinBtn)
+    await page.waitFor(3000)
+  }
+  await browser.close()
+  logger.info('Kết thúc.')
+  logger.info('_____________________________________________________________')
+}
+
+const checkout = async () => {
+  if (config.auto && config.random) {
     const checkoutAfter = ~~(
       Math.random() *
-        config.checkoutRangeEnd.diff(config.checkoutRangeStart, 'm') +
+      config.checkoutRangeEnd.diff(config.checkoutRangeStart, 'm') +
       1
     )
-    const delay = checkin ? checkinAfter : checkoutAfter
-    logger.info(`Checkin/Checkout sẽ bắt đầu sau ${delay} phút`)
-    await sleep(delay * 60 * 1000)
+    logger.info(`Checkin/Checkout sẽ bắt đầu sau ${checkoutAfter} phút`)
+    await sleep(checkoutAfter * 60 * 1000)
   }
   const credentials = config.credentials
 
@@ -55,21 +105,18 @@ const run = async (checkin = true) => {
   await page.click('#passwordNext')
   logger.info('Đang chuyển hướng về trang chủ...')
   await page.waitFor(3000)
-  let checked = false
+  let shouldCheck = true
   try {
     await page
       .mainFrame()
       .waitForSelector(config.checkinBtn, { visible: true, timeout: 3000 })
   } catch (e) {
-    checked = true
+    shouldCheck = false
     logger.warn('Bạn đã checkin hoặc checkout rồi')
   }
-  if (!checked) {
+  if (shouldCheck) {
     page.on('dialog', (dialog) => {
-      if (
-        !checkin ||
-        (!config.auto && moment().isSameOrAfter(config.checkoutStart))
-      ) {
+      if (!config.auto && moment().isSameOrAfter(config.checkoutStart)) {
         logger.info('Hộp thoại xác nhận đang mở...')
         sleep(1000)
         dialog.accept()
@@ -83,7 +130,7 @@ const run = async (checkin = true) => {
         sleep(1000)
       }
     })
-    await page.click(config.checkinBtn)
+    await page.click(config.checkoutBtn)
     await page.waitFor(3000)
   }
   await browser.close()
@@ -94,13 +141,15 @@ const run = async (checkin = true) => {
 ;(async () => {
   try {
     logger.info('Ứng dụng đang khởi động...')
+    let checkinTime = config.checkinStart
+    let checkoutTime = config.checkoutStart
+    if (config.random) {
+      checkinTime = config.checkinRangeStart
+      checkoutTime = config.checkoutRangeStart
+    }
     if (config.auto) {
       logger.info('Đang lập lịch tự động...')
-      let checkinTime = config.checkinStart
-      let checkoutTime = config.checkoutStart
       if (config.random) {
-        checkinTime = config.checkinRangeStart
-        checkoutTime = config.checkoutRangeStart
         logger.info(
           `Checkin ngẫu nhiên trong khoảng ${config.checkinRangeStart.format(
             'HH:mm'
@@ -129,18 +178,14 @@ const run = async (checkin = true) => {
       logger.info(`Checkout cron command: ${checkoutCronCommand}`)
       new CronJob(
         checkinCronCommand,
-        () => {
-          run()
-        },
+        checkin,
         null,
         true,
         'Asia/Ho_Chi_Minh'
       )
       new CronJob(
         checkoutCronCommand,
-        () => {
-          run(false)
-        },
+        checkout,
         null,
         true,
         'Asia/Ho_Chi_Minh'
@@ -150,7 +195,11 @@ const run = async (checkin = true) => {
       logger.warn(
         'Bạn đang không sử dụng Auto Schedule.\nHãy chắc chắn đã config chạy tự động script này.'
       )
-      await run()
+      if (moment().isBefore(checkoutTime)) {
+        await checkin()
+      } else {
+        await checkout()
+      }
     }
   } catch (e) {
     logger.error(e)
